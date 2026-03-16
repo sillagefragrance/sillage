@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sillage — Fragrance Discovery</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Jost:wght@200;300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --lilac: #C4A8D4;
+    --lilac-light: #E2D4EC;
+    --lilac-pale: #F2EBF8;
+    --plum: #3D2152;
+    --plum-mid: #6B4585;
+    --cream: #FAF6F0;
+    --dusty-rose: #D4A8B4;
+    --charcoal: #2C2530;
+    --text-muted: #8A7A92;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--cream);
+    color: var(--charcoal);
+    font-family: 'Jost', sans-serif;
+    font-weight: 300;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* Custom cursor */
+  .cursor {
+    position: fixed;
+    width: 8px;
+    height: 8px;
+    background: var(--plum);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transition: transform 0.15s ease;
+  }
+  .cursor-ring {
+    position: fixed;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--lilac);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9998;
+    transition: all 0.3s ease;
+  }
+
+  /* Nav */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    background: rgba(250,246,240,0.85);
+    backdrop-filter: blur(10px);
+    transition: transform 0.4s ease;
+  }
+
+  nav.hidden {
+    transform: translateY(-100%);
+  }
+
+  @media (max-width: 600px) {
+    nav { padding: 1rem 1.5rem; }
+    .nav-links { gap: 1.2rem; }
+    .nav-links li:nth-child(3), .nav-links li:nth-child(4) { display: none; }
+  }
+
+  .logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.6rem;
+    font-weight: 300;
+    letter-spacing: 0.15em;
+    color: var(--plum);
+    text-decoration: none;
+  }
+
+  .logo span {
+    font-style: italic;
+    color: var(--plum-mid);
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 3rem;
+    list-style: none;
+  }
+
+  .nav-links a {
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+
+  .nav-links a:hover { color: var(--plum); }
+
+  /* Hero */
+  .hero {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-left {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 8rem 4rem 4rem 4rem;
+    position: relative;
+    z-index: 2;
+  }
+
+  @media (max-width: 768px) {
+    .hero { grid-template-columns: 1fr; }
+    .hero-left { padding: 7rem 1.5rem 2rem; }
+    .hero-right { height: 280px; }
+    .steps { grid-template-columns: 1fr !important; }
+    .fragrance-grid { grid-template-columns: 1fr !important; }
+    .quiz-cta { grid-template-columns: 1fr !important; gap: 2rem !important; padding: 4rem 1.5rem !important; }
+    .quiz-visual { height: auto !important; display: flex; flex-direction: column; gap: 1rem; }
+    .quiz-card { position: static !important; transform: none !important; width: 100% !important; }
+    .section { padding: 4rem 1.5rem !important; }
+    .featured { padding: 4rem 1.5rem !important; }
+    footer { flex-direction: column; gap: 1rem; text-align: center; padding: 2rem !important; }
+  }
+
+  .hero-tag {
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--lilac);
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.2s forwards;
+  }
+
+  .hero-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(3.5rem, 6vw, 6rem);
+    font-weight: 300;
+    line-height: 1.05;
+    color: var(--plum);
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.4s forwards;
+  }
+
+  .hero-title em {
+    font-style: italic;
+    color: var(--plum-mid);
+  }
+
+  .hero-subtitle {
+    font-size: 0.9rem;
+    line-height: 1.9;
+    color: var(--text-muted);
+    max-width: 380px;
+    margin-bottom: 3.5rem;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.6s forwards;
+  }
+
+  .hero-cta {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.8s forwards;
+  }
+
+  .btn-primary {
+    background: var(--plum);
+    color: var(--cream);
+    padding: 1rem 2.5rem;
+    font-family: 'Jost', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 300;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    border: none;
+    cursor: none;
+    transition: all 0.3s ease;
+  }
+
+  .btn-primary:hover {
+    background: var(--plum-mid);
+    transform: translateY(-2px);
+  }
+
+  .btn-text {
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: color 0.3s;
+  }
+
+  .btn-text:hover { color: var(--plum); }
+  .btn-text::after { content: '→'; }
+
+  /* Hero right — visual */
+  .hero-right {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--lilac-pale) 0%, var(--lilac-light) 40%, var(--lilac) 100%);
+  }
+
+  .hero-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .orb1 {
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(107,69,133,0.3), transparent);
+    top: 10%; left: 10%;
+    animation-delay: 0s;
+  }
+
+  .orb2 {
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(212,168,180,0.4), transparent);
+    bottom: 20%; right: 5%;
+    animation-delay: 2s;
+  }
+
+  .orb3 {
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(196,168,212,0.5), transparent);
+    top: 50%; left: 40%;
+    animation-delay: 4s;
+  }
+
+  .hero-bottle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 180px;
+    animation: floatBottle 4s ease-in-out infinite;
+    opacity: 0;
+    animation: floatBottle 4s ease-in-out infinite, fadeIn 1s ease 1s forwards;
+  }
+
+  .hero-stat {
+    position: absolute;
+    bottom: 3rem;
+    left: 3rem;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 1.2s forwards;
+  }
+
+  .hero-stat-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 3rem;
+    font-weight: 300;
+    color: var(--plum);
+    line-height: 1;
+  }
+
+  .hero-stat-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-top: 0.3rem;
+  }
+
+  /* Marquee */
+  .marquee-wrap {
+    background: var(--plum);
+    padding: 1rem 0;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .marquee-track {
+    display: inline-block;
+    animation: marquee 20s linear infinite;
+  }
+
+  .marquee-track span {
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--lilac);
+    margin: 0 3rem;
+  }
+
+  .marquee-track span.dot {
+    color: var(--dusty-rose);
+    margin: 0 1rem;
+    letter-spacing: 0;
+  }
+
+  /* Section: How it works */
+  .section {
+    padding: 8rem 4rem;
+  }
+
+  .section-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--lilac);
+    margin-bottom: 1.5rem;
+  }
+
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2.5rem, 4vw, 3.5rem);
+    font-weight: 300;
+    color: var(--plum);
+    line-height: 1.2;
+    max-width: 600px;
+    margin-bottom: 5rem;
+  }
+
+  .section-title em { font-style: italic; }
+
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3rem;
+  }
+
+  .step {
+    padding: 3rem 2.5rem;
+    border: 1px solid var(--lilac-light);
+    position: relative;
+    transition: all 0.4s ease;
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  .step.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .step:hover {
+    border-color: var(--lilac);
+    transform: translateY(-4px);
+    box-shadow: 0 20px 60px rgba(196,168,212,0.2);
+  }
+
+  .step-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 4rem;
+    font-weight: 300;
+    color: var(--lilac-light);
+    line-height: 1;
+    margin-bottom: 1.5rem;
+  }
+
+  .step-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem;
+    font-weight: 400;
+    color: var(--plum);
+    margin-bottom: 1rem;
+  }
+
+  .step-desc {
+    font-size: 0.85rem;
+    line-height: 1.9;
+    color: var(--text-muted);
+  }
+
+  /* Featured fragrances */
+  .featured {
+    background: var(--plum);
+    padding: 8rem 4rem;
+  }
+
+  .featured .section-label { color: var(--lilac); }
+  .featured .section-title { color: var(--cream); }
+
+  .fragrance-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+  }
+
+  .frag-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(196,168,212,0.2);
+    padding: 2rem;
+    cursor: none;
+    transition: all 0.4s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .frag-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(196,168,212,0.1), transparent);
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+
+  .frag-card:hover::before { opacity: 1; }
+  .frag-card:hover { border-color: rgba(196,168,212,0.5); transform: translateY(-4px); }
+
+  .frag-brand {
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--lilac);
+    margin-bottom: 0.8rem;
+  }
+
+  .frag-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.4rem;
+    font-weight: 300;
+    color: var(--cream);
+    margin-bottom: 1rem;
+    line-height: 1.2;
+  }
+
+  .frag-desc {
+    font-size: 0.78rem;
+    line-height: 1.8;
+    color: rgba(250,246,240,0.5);
+    margin-bottom: 1.5rem;
+  }
+
+  .frag-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .tag {
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.3rem 0.8rem;
+    border: 1px solid rgba(196,168,212,0.3);
+    color: var(--lilac);
+    border-radius: 100px;
+  }
+
+  /* Quiz CTA */
+  .quiz-cta {
+    padding: 8rem 4rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6rem;
+    align-items: center;
+  }
+
+  .quiz-visual {
+    position: relative;
+    height: 500px;
+  }
+
+  .quiz-card {
+    position: absolute;
+    background: white;
+    border: 1px solid var(--lilac-light);
+    padding: 2rem 2.5rem;
+    width: 320px;
+    box-shadow: 0 20px 60px rgba(196,168,212,0.15);
+  }
+
+  .quiz-card:nth-child(1) { top: 0; left: 0; transform: rotate(-2deg); }
+  .quiz-card:nth-child(2) { top: 30%; left: 20%; transform: rotate(1deg); z-index: 2; }
+  .quiz-card:nth-child(3) { top: 55%; left: 5%; transform: rotate(-1deg); z-index: 1; }
+
+  .quiz-card-q {
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+  }
+
+  .quiz-card-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.2rem;
+    color: var(--plum);
+    margin-bottom: 1.5rem;
+  }
+
+  .quiz-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .quiz-opt {
+    font-size: 0.78rem;
+    padding: 0.6rem 1rem;
+    border: 1px solid var(--lilac-light);
+    color: var(--charcoal);
+    transition: all 0.2s;
+    cursor: none;
+  }
+
+  .quiz-opt.active {
+    background: var(--plum);
+    color: var(--cream);
+    border-color: var(--plum);
+  }
+
+  /* Mobile */
+  @media (max-width: 768px) {
+    nav { padding: 1.5rem 1.5rem; }
+    .nav-links { display: none; }
+
+    .hero { grid-template-columns: 1fr; }
+    .hero-right { height: 300px; }
+    .hero-left { padding: 7rem 1.5rem 3rem; }
+
+    .section { padding: 4rem 1.5rem; }
+
+    .steps { grid-template-columns: 1fr; gap: 1.5rem; }
+
+    .featured { padding: 4rem 1.5rem; }
+    .fragrance-grid { grid-template-columns: 1fr; gap: 1rem; }
+
+    .quiz-cta { 
+      grid-template-columns: 1fr; 
+      padding: 4rem 1.5rem;
+      gap: 3rem;
+    }
+    .quiz-visual { display: none; }
+
+    footer { 
+      flex-direction: column; 
+      gap: 1rem; 
+      text-align: center;
+      padding: 2rem 1.5rem;
+    }
+  }
+
+  /* Footer */
+  footer {
+    background: var(--charcoal);
+    padding: 4rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .footer-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.4rem;
+    color: var(--cream);
+    font-weight: 300;
+    letter-spacing: 0.15em;
+  }
+
+  .footer-logo span { font-style: italic; color: var(--lilac); }
+
+  .footer-text {
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+  }
+
+  /* Animations */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+  }
+
+  @keyframes floatBottle {
+    0%, 100% { transform: translate(-50%, -50%) translateY(0); }
+    50% { transform: translate(-50%, -50%) translateY(-15px); }
+  }
+
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  /* SVG Bottle */
+  .bottle-svg {
+    width: 140px;
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    animation: floatBottle 5s ease-in-out infinite;
+    opacity: 0;
+    animation: floatBottle 5s ease-in-out infinite, fadeIn 1s ease 1s forwards;
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<nav>
+  <a href="#" class="logo">Sil<span>lage</span></a>
+  <ul class="nav-links">
+    <li><a href="#">Discover</a></li>
+    <li><a href="#">Scent Quiz</a></li>
+    <li><a href="#">Scent Theory</a></li>
+    <li><a href="#">Brands</a></li>
+  </ul>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-left">
+    <p class="hero-tag">India's fragrance discovery platform</p>
+    <h1 class="hero-title">Find the scent<br>that is <em>entirely</em><br>you.</h1>
+    <p class="hero-subtitle">No jargon. No confusion. Just a few questions about your life — and we'll find your perfect fragrance, from the best Indian and international brands available in India.</p>
+    <div class="hero-cta">
+      <button class="btn-primary">Take the Quiz</button>
+      <a href="#" class="btn-text">Browse fragrances</a>
+    </div>
+  </div>
+  <div class="hero-right">
+    <div class="hero-bg"></div>
+    <div class="hero-orb orb1"></div>
+    <div class="hero-orb orb2"></div>
+    <div class="hero-orb orb3"></div>
+
+    <!-- Perfume bottle SVG -->
+    <svg class="bottle-svg" viewBox="0 0 140 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="50" y="0" width="40" height="15" rx="4" fill="#6B4585" opacity="0.6"/>
+      <rect x="55" y="12" width="30" height="20" rx="3" fill="#6B4585" opacity="0.7"/>
+      <path d="M30 75 Q25 80 25 100 L25 210 Q25 225 40 225 L100 225 Q115 225 115 210 L115 100 Q115 80 110 75 L85 32 L55 32 Z" fill="url(#bottleGrad)" opacity="0.85"/>
+      <path d="M35 110 L105 110 L105 210 Q105 218 98 218 L42 218 Q35 218 35 210 Z" fill="url(#liquidGrad)" opacity="0.5"/>
+      <rect x="42" y="155" width="56" height="45" rx="2" fill="rgba(255,255,255,0.15)"/>
+      <text x="70" y="173" text-anchor="middle" font-family="Cormorant Garamond, serif" font-size="7" fill="rgba(255,255,255,0.9)" letter-spacing="2">SILLAGE</text>
+      <text x="70" y="186" text-anchor="middle" font-family="Jost, sans-serif" font-size="5" fill="rgba(255,255,255,0.6)" letter-spacing="1.5">No. 01</text>
+      <text x="70" y="196" text-anchor="middle" font-family="Jost, sans-serif" font-size="4.5" fill="rgba(255,255,255,0.5)" letter-spacing="1">EAU DE PARFUM</text>
+      <path d="M40 75 Q70 65 100 75" stroke="rgba(255,255,255,0.3)" stroke-width="1" fill="none"/>
+      <defs>
+        <linearGradient id="bottleGrad" x1="25" y1="0" x2="115" y2="240" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#C4A8D4"/>
+          <stop offset="50%" stop-color="#9B6BB5"/>
+          <stop offset="100%" stop-color="#3D2152"/>
+        </linearGradient>
+        <linearGradient id="liquidGrad" x1="25" y1="110" x2="115" y2="225" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#E2D4EC"/>
+          <stop offset="100%" stop-color="#6B4585"/>
+        </linearGradient>
+      </defs>
+    </svg>
+
+    <div class="hero-stat">
+      <div class="hero-stat-num">50+</div>
+      <div class="hero-stat-label">Curated fragrances</div>
+    </div>
+  </div>
+</section>
+
+<!-- Marquee -->
+<div class="marquee-wrap">
+  <div class="marquee-track">
+    <span>Bombay Perfumery</span><span class="dot">·</span>
+    <span>Naso Profumi</span><span class="dot">·</span>
+    <span>All Good Scents</span><span class="dot">·</span>
+    <span>ISAK Fragrances</span><span class="dot">·</span>
+    <span>Ajmal</span><span class="dot">·</span>
+    <span>Good Earth</span><span class="dot">·</span>
+    <span>LilaNur Parfums</span><span class="dot">·</span>
+    <span>Call of the Valley</span><span class="dot">·</span>
+    <span>Bombay Perfumery</span><span class="dot">·</span>
+    <span>Naso Profumi</span><span class="dot">·</span>
+    <span>All Good Scents</span><span class="dot">·</span>
+    <span>ISAK Fragrances</span><span class="dot">·</span>
+    <span>Ajmal</span><span class="dot">·</span>
+    <span>Good Earth</span><span class="dot">·</span>
+    <span>LilaNur Parfums</span><span class="dot">·</span>
+    <span>Call of the Valley</span><span class="dot">·</span>
+  </div>
+</div>
+
+<!-- How it works -->
+<section class="section">
+  <p class="section-label">How it works</p>
+  <h2 class="section-title">No fragrance expertise <em>required.</em></h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-title">Tell us about your life</div>
+      <p class="step-desc">Long work hours or weekend brunches? AC office or outdoor commute? We ask about your actual life — not your taste in music.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-title">We decode the jargon</div>
+      <p class="step-desc">You'll never see the words "sillage" or "EDP" unless you want to. We translate everything into language that actually makes sense.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-title">Get your scent wardrobe</div>
+      <p class="step-desc">Not just a perfume — your complete scent routine. Body wash, lotion, attar, EDP. Everything cohesive, everything curated for you.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Featured -->
+<section class="featured">
+  <p class="section-label">Featured fragrances</p>
+  <h2 class="section-title">Curated for the <em>Indian nose.</em></h2>
+  <div class="fragrance-grid">
+    <div class="frag-card">
+      <div class="frag-brand">Bombay Perfumery</div>
+      <div class="frag-name">Salty Route</div>
+      <p class="frag-desc">Like standing at the edge of the sea before a storm. Fresh, mineral, alive.</p>
+      <div class="frag-tags">
+        <span class="tag">All day</span>
+        <span class="tag">Office</span>
+        <span class="tag">Fresh</span>
+      </div>
+    </div>
+    <div class="frag-card">
+      <div class="frag-brand">ISAK Fragrances</div>
+      <div class="frag-name">Oudh Shamama</div>
+      <p class="frag-desc">170 years of Lucknow attar tradition. Rich, resinous, deeply intimate.</p>
+      <div class="frag-tags">
+        <span class="tag">Evening</span>
+        <span class="tag">Date</span>
+        <span class="tag">Oriental</span>
+      </div>
+    </div>
+    <div class="frag-card">
+      <div class="frag-brand">Naso Profumi</div>
+      <div class="frag-name">White Vetiver</div>
+      <p class="frag-desc">Earthy, smoky, grounding. Distilled from North Indian roots using traditional methods.</p>
+      <div class="frag-tags">
+        <span class="tag">Unisex</span>
+        <span class="tag">Woody</span>
+        <span class="tag">Everyday</span>
+      </div>
+    </div>
+    <div class="frag-card">
+      <div class="frag-brand">All Good Scents</div>
+      <div class="frag-name">Morning Ritual</div>
+      <p class="frag-desc">Clean, vegan, minimal. Crafted by a Paris-trained perfumer for the Indian climate.</p>
+      <div class="frag-tags">
+        <span class="tag">Morning</span>
+        <span class="tag">Brunch</span>
+        <span class="tag">Floral</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Quiz CTA -->
+<section class="quiz-cta">
+  <div class="quiz-visual">
+    <div class="quiz-card">
+      <div class="quiz-card-q">Question 1 of 7</div>
+      <div class="quiz-card-title">What's the occasion?</div>
+      <div class="quiz-options">
+        <div class="quiz-opt">Work / long day</div>
+        <div class="quiz-opt active">Brunch / casual hangout</div>
+        <div class="quiz-opt">Date night</div>
+        <div class="quiz-opt">Night out / party</div>
+      </div>
+    </div>
+    <div class="quiz-card">
+      <div class="quiz-card-q">Question 4 of 7</div>
+      <div class="quiz-card-title">How much do you sweat?</div>
+      <div class="quiz-options">
+        <div class="quiz-opt">Barely — always in AC</div>
+        <div class="quiz-opt active">Moderate</div>
+        <div class="quiz-opt">A lot — outdoors often</div>
+      </div>
+    </div>
+    <div class="quiz-card">
+      <div class="quiz-card-q">Your result</div>
+      <div class="quiz-card-title">The Warm Minimalist</div>
+      <div class="quiz-options">
+        <div class="quiz-opt active">3 fragrances matched ✦</div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <p class="section-label">The quiz</p>
+    <h2 class="section-title">7 questions. Your <em>perfect</em> scent.</h2>
+    <p style="font-size:0.9rem; line-height:1.9; color:var(--text-muted); margin-bottom:2.5rem; max-width:400px;">
+      We don't ask about your favourite colour. We ask if you sweat on your commute, if you can reapply at lunch, and whether you're going on a date or a brunch. Then we find your fragrance.
+    </p>
+    <button class="btn-primary">Start the quiz →</button>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-logo">Sil<span>lage</span></div>
+  <div class="footer-text">Fragrance discovery for India · Under ₹1,000 to ₹4,000</div>
+</footer>
+
+<script>
+  // Nav hide on scroll
+  let lastScroll = 0;
+  const nav = document.querySelector('nav');
+  window.addEventListener('scroll', () => {
+    const current = window.scrollY;
+    if (current > lastScroll && current > 80) {
+      nav.classList.add('hidden');
+    } else {
+      nav.classList.remove('hidden');
+    }
+    lastScroll = current;
+  });
+
+  // Custom cursor
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  let mouseX = 0, mouseY = 0, ringX = 0, ringY = 0;
+
+  document.addEventListener('mousemove', e => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+    cursor.style.left = mouseX - 4 + 'px';
+    cursor.style.top = mouseY - 4 + 'px';
+  });
+
+  function animateRing() {
+    ringX += (mouseX - ringX - 16) * 0.12;
+    ringY += (mouseY - ringY - 16) * 0.12;
+    ring.style.left = ringX + 'px';
+    ring.style.top = ringY + 'px';
+    requestAnimationFrame(animateRing);
+  }
+  animateRing();
+
+  document.querySelectorAll('button, a, .frag-card, .quiz-opt').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      cursor.style.transform = 'scale(2)';
+      ring.style.transform = 'scale(1.5)';
+      ring.style.borderColor = 'var(--plum)';
+    });
+    el.addEventListener('mouseleave', () => {
+      cursor.style.transform = 'scale(1)';
+      ring.style.transform = 'scale(1)';
+      ring.style.borderColor = 'var(--lilac)';
+    });
+  });
+
+  // Scroll reveal
+  const steps = document.querySelectorAll('.step');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => entry.target.classList.add('visible'), i * 150);
+      }
+    });
+  }, { threshold: 0.2 });
+  steps.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
