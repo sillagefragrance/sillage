@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sillage — Find Your Scent</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #F5F3FF;
+    --ink: #1A1525;
+    --warm: #9B7FC7;
+    --accent: #7C5CBF;
+    --soft: #E8E2F7;
+    --muted: #9E93B8;
+    --card: #FFFFFF;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+
+  .quiz-wrap {
+    width: 100%;
+    max-width: 640px;
+  }
+
+  /* HEADER */
+  .brand {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem;
+    font-weight: 300;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--accent);
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  /* PROGRESS */
+  .progress-bar {
+    width: 100%;
+    height: 1px;
+    background: var(--soft);
+    margin-bottom: 3rem;
+    position: relative;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .progress-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-align: right;
+    margin-top: 0.5rem;
+    text-transform: uppercase;
+  }
+
+  /* QUESTION */
+  .question-block {
+    opacity: 0;
+    transform: translateY(16px);
+    animation: fadeUp 0.5s forwards;
+  }
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .page-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--warm);
+    margin-bottom: 0.75rem;
+  }
+
+  .question-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2rem;
+    font-weight: 300;
+    line-height: 1.3;
+    margin-bottom: 2.5rem;
+    color: var(--ink);
+  }
+
+  .question-text em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  /* OPTIONS */
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .option {
+    border: 1px solid var(--soft);
+    background: white;
+    padding: 1.1rem 1.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 300;
+    color: var(--ink);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .option::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 0;
+    background: var(--accent);
+    transition: width 0.3s ease;
+  }
+
+  .option:hover {
+    border-color: var(--warm);
+    color: var(--accent);
+    padding-left: 2rem;
+  }
+
+  .option:hover::before {
+    width: 3px;
+  }
+
+  .option.selected {
+    border-color: var(--accent);
+    background: var(--soft);
+    color: var(--accent);
+    padding-left: 2rem;
+    font-weight: 500;
+  }
+
+  .option.selected::before {
+    width: 3px;
+  }
+
+  /* MULTI SELECT HINT */
+  .hint {
+    font-size: 0.72rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    margin-bottom: 1.2rem;
+  }
+
+  /* NAV BUTTONS */
+  .btn-row {
+    margin-top: 2.5rem;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .next-btn {
+    background: var(--ink);
+    color: var(--cream);
+    border: none;
+    padding: 1rem 2.5rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .next-btn:hover {
+    background: var(--accent);
+  }
+
+  .back-btn {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--soft);
+    padding: 1rem 1.5rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .next-btn.disabled {
+    background: var(--soft);
+    color: var(--muted);
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  /* RESULTS */
+  .results-block {
+    opacity: 0;
+    animation: fadeUp 0.6s forwards;
+  }
+
+  .results-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem;
+    font-weight: 300;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+  }
+
+  .results-headline {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.2rem;
+    font-weight: 300;
+    line-height: 1.2;
+    margin-bottom: 2.5rem;
+    color: var(--ink);
+  }
+
+  .perfume-card {
+    background: white;
+    border: 1px solid var(--soft);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    position: relative;
+    animation: fadeUp 0.5s forwards;
+    opacity: 0;
+  }
+
+  .perfume-card.perfect {
+    padding: 2rem;
+    border-color: var(--accent);
+  }
+
+  .perfume-card.perfect .perfume-name {
+    font-size: 2rem;
+  }
+
+  .perfume-card.perfect .perfume-brand {
+    font-size: 0.85rem;
+  }
+
+  .perfume-card.perfect .perfume-notes {
+    font-size: 0.92rem;
+  }
+
+  .perfume-card.similar .perfume-name {
+    color: var(--muted);
+  }
+
+  .perfume-card.similar .perfume-notes {
+    color: var(--muted);
+  }
+
+  .perfume-card:nth-child(1) { animation-delay: 0.1s; }
+  .perfume-card:nth-child(2) { animation-delay: 0.2s; }
+  .perfume-card:nth-child(3) { animation-delay: 0.3s; }
+
+  .perfume-rank {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--warm);
+    margin-bottom: 0.3rem;
+  }
+
+  .perfume-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem;
+    font-weight: 400;
+    color: var(--ink);
+    margin-bottom: 0.2rem;
+  }
+
+  .perfume-brand {
+    font-size: 0.75rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+  }
+
+  .perfume-notes {
+    font-size: 0.82rem;
+    color: var(--accent);
+    margin-bottom: 0.8rem;
+    line-height: 1.6;
+  }
+
+  .perfume-meta {
+    display: flex;
+    gap: 1.5rem;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  .perfume-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .no-results {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.2rem;
+    font-style: italic;
+    color: var(--muted);
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .restart-btn {
+    margin-top: 2rem;
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 0.8rem 2rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .restart-btn:hover {
+    background: var(--accent);
+    color: white;
+  }
+
+  /* BRANCH PAGE */
+  .branch-subtitle {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 2rem;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+
+<div class="quiz-wrap">
+  <div class="brand">Sillage</div>
+
+  <div class="progress-bar">
+    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+  </div>
+  <div class="progress-label" id="progressLabel">Step 1 of 6</div>
+
+  <div id="quizContainer"></div>
+</div>
+
+<script>
+// ============================================================
+// PERFUME DATABASE (10 perfumes mapped)
+// ============================================================
+const perfumes = [
+  {
+    id: 1,
+    name: "5th & Always",
+    brand: "ISAK Fragrances",
+    type: "EDP",
+    family: "Floral Woody",
+    notes: { top: "Rose, Jasmine", mid: "Vetiver, Musk", base: "Sandalwood, Amber" },
+    price: 800,
+    priceBucket: "500-1000",
+    occasion: ["everyday", "goingout"],
+    longevity: ["fullworkday"],
+    scent: "flowers",
+    branch: "fresh-cut-flowers",
+    eliminatedBy: ["too-floral", "too-heavy-smoky"],
+    where: "isakfragrances.com"
+  },
+  {
+    id: 2,
+    name: "Love Song",
+    brand: "ISAK Fragrances",
+    type: "EDP",
+    family: "Floral Fresh",
+    notes: { top: "Lemon, Juniper", mid: "Jasmine, Apple", base: "Amber, Musk" },
+    price: 800,
+    priceBucket: "500-1000",
+    occasion: ["everyday", "goingout"],
+    longevity: ["fullworkday"],
+    scent: "fresh",
+    branch: "fresh-citrusy",
+    eliminatedBy: ["too-sharp", "musk"],
+    where: "isakfragrances.com"
+  },
+  {
+    id: 3,
+    name: "Sunshine & Me",
+    brand: "ISAK Fragrances",
+    type: "EDP",
+    family: "Floral Fresh",
+    notes: { top: "Lemon, Marine", mid: "Gardenia, Clove, Nutmeg", base: "Cedarwood, Patchouli" },
+    price: 550,
+    priceBucket: "500-1000",
+    occasion: ["everyday", "active"],
+    longevity: ["reapply"],
+    scent: "fresh",
+    branch: "citrus-spice",
+    eliminatedBy: ["musk", "too-heavy-smoky"],
+    where: "isakfragrances.com"
+  },
+  {
+    id: 4,
+    name: "Cosmic Dance",
+    brand: "ISAK Fragrances",
+    type: "EDP",
+    family: "Floral Oriental",
+    notes: { top: "Bergamot, Leather", mid: "Jasmine, Iris, Chocolate Oudh", base: "Tobacco, Sandalwood" },
+    price: 800,
+    priceBucket: "500-1000",
+    occasion: ["goingout", "special"],
+    longevity: ["allday"],
+    scent: "wood",
+    branch: "oud-deep",
+    eliminatedBy: ["too-heavy-smoky", "too-floral", "musk"],
+    where: "isakfragrances.com"
+  },
+  {
+    id: 5,
+    name: "Edge of Dreams",
+    brand: "ISAK Fragrances",
+    type: "EDP",
+    family: "Amber Musk",
+    notes: { top: "Sweet Musk, Oakmoss", mid: "Floral, Amber", base: "Musk, Warm Wood" },
+    price: 800,
+    priceBucket: "500-1000",
+    occasion: ["everyday", "goingout"],
+    longevity: ["fullworkday"],
+    scent: "wood",
+    branch: "mossy-earthy",
+    eliminatedBy: ["musk", "too-heavy-smoky"],
+    where: "isakfragrances.com"
+  },
+  {
+    id: 6,
+    name: "Top of the World",
+    brand: "ISAK Fragrances",
+    type: "EDP",
+    family: "Fresh",
+    notes: { top: "Citrus, Green", mid: "Peony, Rose", base: "Cedarwood, Musk" },
+    price: 800,
+    priceBucket: "500-1000",
+    occasion: ["everyday", "goingout"],
+    longevity: ["fullworkday"],
+    scent: "fresh",
+    branch: "fresh-green",
+    eliminatedBy: ["too-fresh-bright", "musk"],
+    where: "isakfragrances.com"
+  },
+  {
+    id: 7,
+    name: "Vanilla on Fire",
+    brand: "ISAK Fragrances",
+    type: "EDP",
+    family: "Gourmand",
+    notes: { top: "Vanilla, Lily of the Valley, Pineapple", mid: "Jasmine Sambac, Pine, Cinnamon", base: "Himalayan Cedarwood, Sandalwood" },
+    price: 1490,
+    priceBucket: "1000-2000",
+    occasion: ["goingout", "special"],
+    longevity: ["fullworkday"],
+    scent: "vanilla",
+    branch: "smoky-deep",
+    eliminatedBy: ["too-sweet", "too-heavy-smoky", "too-floral"],
+    where: "isakfragrances.com"
+  },
+  {
+    id: 8,
+    name: "It's Complicated",
+    brand: "ISAK Fragrances",
+    type: "EDP",
+    family: "Fresh Fruity",
+    notes: { top: "Vanilla, Lemon, Grapefruit", mid: "Watermelon, Narcissus, Rose", base: "Clove, Sandalwood, Cedarwood" },
+    price: 1490,
+    priceBucket: "1000-2000",
+    occasion: ["everyday", "goingout"],
+    longevity: ["fullworkday"],
+    scent: "fresh",
+    branch: "fresh-citrusy",
+    eliminatedBy: ["too-fresh-bright", "too-floral"],
+    where: "isakfragrances.com"
+  },
+  {
+    id: 9,
+    name: "Butterflies in My Stomach",
+    brand: "ISAK Fragrances",
+    type: "EDP",
+    family: "Floral Fruity",
+    notes: { top: "Bergamot, Blood Orange, Raspberry", mid: "Tuberose, Amber, Rose", base: "Vetiver, Musk, Guaiac" },
+    price: 1890,
+    priceBucket: "1000-2000",
+    occasion: ["goingout", "special"],
+    longevity: ["fullworkday", "allday"],
+    scent: "fresh",
+    branch: "fresh-citrusy",
+    eliminatedBy: ["too-fresh-bright", "musk"],
+    where: "isakfragrances.com"
+  },
+  {
+    id: 10,
+    name: "Memoirs of Love",
+    brand: "ISAK Fragrances",
+    type: "EDP",
+    family: "Gourmand Floral",
+    notes: { top: "Strawberry, Caramel, Amber", mid: "Tangerine, Gardenia, Violet", base: "Vetiver, Musk, Sandalwood" },
+    price: 1890,
+    priceBucket: "1000-2000",
+    occasion: ["goingout", "special"],
+    longevity: ["fullworkday"],
+    scent: "vanilla",
+    branch: "bakery-sweet",
+    eliminatedBy: ["too-sweet", "too-floral", "musk"],
+    where: "isakfragrances.com"
+  }
+];
+
+// ============================================================
+// QUIZ FLOW
+// ============================================================
+const TOTAL_STEPS = 6;
+let answers = {};
+let currentStep = 1;
+
+const steps = [
+  // STEP 1 — Occasion
+  {
+    page: "Page 1 — Lifestyle",
+    question: "What's the <em>occasion?</em>",
+    key: "occasion",
+    type: "single",
+    options: [
+      { label: "Everyday", sub: "office / college / casual", value: "everyday" },
+      { label: "Going Out", sub: "brunch / hangout / night out", value: "goingout" },
+      { label: "Special", sub: "wedding / formal event", value: "special" },
+      { label: "Active", sub: "gym / outdoors", value: "active" }
+    ]
+  },
+  // STEP 2 — Longevity
+  {
+    page: "Page 1 — Lifestyle",
+    question: "How long do you need it to <em>last?</em>",
+    key: "longevity",
+    type: "single",
+    options: [
+      { label: "3–4 hours", sub: "I can reapply", value: "reapply" },
+      { label: "Full workday", sub: "sometimes I reapply", value: "fullworkday" },
+      { label: "All day & evening", sub: "can't reapply", value: "allday" }
+    ]
+  },
+  // STEP 3 — Budget
+  {
+    page: "Page 1 — Lifestyle",
+    question: "What's your <em>budget?</em>",
+    key: "budget",
+    type: "single",
+    options: [
+      { label: "₹500 – ₹1,000", value: "500-1000" },
+      { label: "₹1,000 – ₹2,000", value: "1000-2000" },
+      { label: "₹2,000 – ₹3,000", value: "2000-3000" }
+    ]
+  },
+  // STEP 4 — Can't stand
+  {
+    page: "Page 2 — Your Taste",
+    question: "What can you <em>absolutely not stand?</em>",
+    key: "cantstand",
+    type: "multi",
+    hint: "Pick all that apply",
+    options: [
+      { label: "Too sweet", value: "too-sweet" },
+      { label: "Too heavy & smoky", value: "too-heavy-smoky" },
+      { label: "Too powdery", value: "too-powdery" },
+      { label: "Too sharp", value: "too-sharp" },
+      { label: "Too floral", value: "too-floral" },
+      { label: "Musk", value: "musk" },
+      { label: "Too fresh & bright", value: "too-fresh-bright" }
+    ]
+  },
+  // STEP 5 — Scent family
+  {
+    page: "Page 2 — Your Taste",
+    question: "What smells do you <em>love?</em>",
+    key: "scent",
+    type: "single",
+    options: [
+      { label: "Flowers", value: "flowers" },
+      { label: "Warm vanilla & sugar", value: "vanilla" },
+      { label: "Fresh", sub: "citrus / green / aqua", value: "fresh" },
+      { label: "Wood & earth", value: "wood" }
+    ]
+  },
+  // STEP 6 — Branch (dynamic based on scent)
+  {
+    page: "Page 3 — Diving Deeper",
+    question: "Which feels most like <em>you?</em>",
+    key: "branch",
+    type: "single",
+    dynamic: true // generated based on scent answer
+  }
+];
+
+const branches = {
+  flowers: [
+    { label: "Fresh cut flowers", sub: "light, clean, just-picked", value: "fresh-cut-flowers" },
+    { label: "Powdery soft", sub: "gentle, nostalgic, subtle", value: "powdery-soft" },
+    { label: "Warm & heady", sub: "intense, lush, intoxicating", value: "warm-heady" }
+  ],
+  vanilla: [
+    { label: "Bakery sweet", sub: "caramel, sugar, dessert", value: "bakery-sweet" },
+    { label: "Spiced warm", sub: "cinnamon, cardamom, cozy", value: "spiced-warm" },
+    { label: "Smoky deep", sub: "dark, brooding, mysterious", value: "smoky-deep" }
+  ],
+  fresh: [
+    { label: "Light & airy", sub: "barely there, effortless", value: "light-airy" },
+    { label: "Clean & crisp", sub: "soapy, just-showered", value: "clean-crisp" },
+    { label: "Fresh & green", sub: "grassy, leaves, outdoors", value: "fresh-green" },
+    { label: "Fresh & citrusy", sub: "lemon, grapefruit, zesty", value: "fresh-citrusy" },
+    { label: "Citrus with spice", sub: "zesty with a warm kick", value: "citrus-spice" },
+    { label: "Ocean & marine", sub: "sea breeze, aquatic", value: "ocean-marine" },
+    { label: "Fresh rain", sub: "petrichor, earthy, cool", value: "fresh-rain" }
+  ],
+  wood: [
+    { label: "Sandalwood & creamy", sub: "soft, warm, milky", value: "sandalwood-creamy" },
+    { label: "Oud & deep", sub: "rich, resinous, intense", value: "oud-deep" },
+    { label: "Smoky & resinous", sub: "incense, dark woods", value: "smoky-resinous" },
+    { label: "Mossy & earthy", sub: "forest floor, damp earth", value: "mossy-earthy" }
+  ]
+};
+
+// ============================================================
+// RENDER ENGINE
+// ============================================================
+function render() {
+  const container = document.getElementById('quizContainer');
+  const pct = ((currentStep - 1) / TOTAL_STEPS) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = `Step ${currentStep} of ${TOTAL_STEPS}`;
+
+  if (currentStep > TOTAL_STEPS) {
+    renderResults();
+    return;
+  }
+
+  const step = steps[currentStep - 1];
+  let options = step.options;
+
+  // Dynamic branch options
+  if (step.dynamic) {
+    options = branches[answers.scent] || [];
+  }
+
+  const isMulti = step.type === 'multi';
+  const selectedVals = answers[step.key] || (isMulti ? [] : null);
+
+  container.innerHTML = `
+    <div class="question-block">
+      <div class="page-label">${step.page}</div>
+      <div class="question-text">${step.question}</div>
+      ${step.hint ? `<div class="hint">${step.hint}</div>` : ''}
+      <div class="options">
+        ${options.map(opt => `
+          <button class="option ${isSelected(step.key, opt.value, isMulti) ? 'selected' : ''}"
+            onclick="selectOption('${step.key}', '${opt.value}', ${isMulti})">
+            ${opt.label}${opt.sub ? `<br><span style="font-size:0.75rem;color:var(--muted);font-weight:300">${opt.sub}</span>` : ''}
+          </button>
+        `).join('')}
+      </div>
+      <div class="btn-row">
+        ${currentStep > 1 ? `<button class="back-btn" onclick="prevStep()">← Back</button>` : ''}
+        <button class="next-btn ${isMulti || answers[step.key] ? '' : 'disabled'}" id="nextBtn" onclick="nextStep()">
+          ${currentStep === TOTAL_STEPS ? 'See My Scents →' : 'Continue →'}
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+function isSelected(key, value, isMulti) {
+  if (isMulti) return (answers[key] || []).includes(value);
+  return answers[key] === value;
+}
+
+function hasAnswer(key, isMulti) {
+  if (isMulti) return true; // can always proceed (0 selections = no filters)
+  return !!answers[key];
+}
+
+function selectOption(key, value, isMulti) {
+  if (isMulti) {
+    if (!answers[key]) answers[key] = [];
+    const idx = answers[key].indexOf(value);
+    if (idx > -1) answers[key].splice(idx, 1);
+    else answers[key].push(value);
+  } else {
+    answers[key] = value;
+  }
+  renderOptions(key, isMulti);
+}
+
+function renderOptions(key, isMulti) {
+  const step = steps[currentStep - 1];
+  let options = step.options;
+  if (step.dynamic) options = branches[answers.scent] || [];
+
+  document.querySelectorAll('.option').forEach((btn, i) => {
+    const val = options[i]?.value;
+    if (isMulti) {
+      btn.classList.toggle('selected', (answers[key] || []).includes(val));
+    } else {
+      btn.classList.toggle('selected', answers[key] === val);
+    }
+  });
+
+  // Update continue button state
+  const nextBtn = document.getElementById('nextBtn');
+  if (nextBtn && !isMulti) {
+    nextBtn.classList.toggle('disabled', !answers[key]);
+  }
+}
+
+function nextStep() {
+  const step = steps[currentStep - 1];
+  const isMulti = step.type === 'multi';
+  if (!isMulti && !answers[step.key]) return; // mandatory block
+  currentStep++;
+  render();
+}
+
+function prevStep() {
+  if (currentStep > 1) {
+    currentStep--;
+    render();
+  }
+}
+
+// ============================================================
+// CONFETTI
+// ============================================================
+function launchConfetti() {
+  const colors = ['#7C5CBF', '#9B7FC7', '#B89FD8', '#D4C5EE', '#5A3A9A', '#C4AAFF', '#E8E2F7'];
+  const canvas = document.createElement('canvas');
+  canvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;';
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const pieces = Array.from({ length: 120 }, () => ({
+    x: Math.random() * canvas.width,
+    y: -20 - Math.random() * 100,
+    w: 6 + Math.random() * 8,
+    h: 10 + Math.random() * 8,
+    color: colors[Math.floor(Math.random() * colors.length)],
+    rot: Math.random() * 360,
+    rotSpeed: (Math.random() - 0.5) * 6,
+    vx: (Math.random() - 0.5) * 3,
+    vy: 2 + Math.random() * 4,
+    opacity: 1
+  }));
+
+  let frame = 0;
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    pieces.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.rotSpeed;
+      if (frame > 90) p.opacity -= 0.015;
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, p.opacity);
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot * Math.PI / 180);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    });
+    frame++;
+    if (frame < 160) requestAnimationFrame(animate);
+    else canvas.remove();
+  }
+  animate();
+}
+
+// ============================================================
+// RESULTS
+// ============================================================
+function renderResults() {
+  document.getElementById('progressFill').style.width = '100%';
+  document.getElementById('progressLabel').textContent = 'Your recommendations';
+  launchConfetti();
+
+  const matched = perfumes.filter(p => {
+    // Budget filter — show all perfumes UP TO the selected max
+    if (answers.budget) {
+      const maxPrice = { '500-1000': 1000, '1000-2000': 2000, '2000-3000': 3000 }[answers.budget];
+      if (p.price > maxPrice) return false;
+    }
+    // Occasion filter
+    if (answers.occasion && !p.occasion.includes(answers.occasion)) return false;
+    // Longevity filter
+    if (answers.longevity && !p.longevity.includes(answers.longevity)) return false;
+    // Can't stand filter
+    if (answers.cantstand && answers.cantstand.length > 0) {
+      for (const bad of answers.cantstand) {
+        if (p.eliminatedBy.includes(bad)) return false;
+      }
+    }
+    // Scent family
+    if (answers.scent && p.scent !== answers.scent) return false;
+    // Branch
+    if (answers.branch && p.branch !== answers.branch) return false;
+    return true;
+  });
+
+  // Fallback — relax branch if no results
+  let perfectMatch = matched;
+  
+  // "You may also like" — same scent family, passes cant-stand, within budget, different branch
+  let mayAlsoLike = perfumes.filter(p => {
+    if (perfectMatch.includes(p)) return false;
+    if (answers.budget) {
+      const maxPrice = { '500-1000': 1000, '1000-2000': 2000, '2000-3000': 3000 }[answers.budget];
+      if (p.price > maxPrice) return false;
+    }
+    if (answers.cantstand && answers.cantstand.length > 0) {
+      for (const bad of answers.cantstand) {
+        if (p.eliminatedBy.includes(bad)) return false;
+      }
+    }
+    if (answers.scent && p.scent !== answers.scent) return false;
+    return true;
+  }).slice(0, 2);
+
+  // If no perfect match, use scent-family matches as perfect and relax further for may-also-like
+  if (perfectMatch.length === 0) {
+    perfectMatch = mayAlsoLike.slice(0, 1);
+    mayAlsoLike = perfumes.filter(p => {
+      if (perfectMatch.includes(p)) return false;
+      if (answers.cantstand && answers.cantstand.length > 0) {
+        for (const bad of answers.cantstand) {
+          if (p.eliminatedBy.includes(bad)) return false;
+        }
+      }
+      return true;
+    }).slice(0, 2);
+  }
+
+  const container = document.getElementById('quizContainer');
+
+  if (perfectMatch.length === 0 && mayAlsoLike.length === 0) {
+    container.innerHTML = `
+      <div class="results-block">
+        <div class="results-title">Your Results</div>
+        <div class="results-headline">Hmm, nothing matched perfectly.</div>
+        <p class="no-results">Try adjusting your preferences — your ideal scent is in here somewhere.</p>
+        <button class="restart-btn" onclick="restart()">Start Over</button>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="results-block">
+      <div class="results-title">Your Results</div>
+      <div class="results-headline">Your perfect <em>scent match.</em></div>
+      ${perfectMatch.slice(0, 1).map(p => `
+        <div class="perfume-card perfect">
+          <div class="perfume-rank">✦ Perfect Match</div>
+          <div class="perfume-name">${p.name}</div>
+          <div class="perfume-brand">${p.brand} · ${p.type}</div>
+          <div class="perfume-notes">
+            <strong>Top:</strong> ${p.notes.top}<br>
+            <strong>Heart:</strong> ${p.notes.mid}<br>
+            <strong>Base:</strong> ${p.notes.base}
+          </div>
+          <div class="perfume-meta">
+            <span>₹${p.price.toLocaleString()}</span>
+            <span>${p.family}</span>
+            <span>${p.where}</span>
+          </div>
+        </div>
+      `).join('')}
+      ${mayAlsoLike.length > 0 ? `
+        <div style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:300;color:var(--muted);margin:1.5rem 0 1rem;letter-spacing:0.05em;">
+          You may also like
+        </div>
+        ${mayAlsoLike.map(p => `
+          <div class="perfume-card similar">
+            <div class="perfume-name">${p.name}</div>
+            <div class="perfume-brand">${p.brand} · ${p.type}</div>
+            <div class="perfume-notes">
+              <strong>Top:</strong> ${p.notes.top}<br>
+              <strong>Heart:</strong> ${p.notes.mid}<br>
+              <strong>Base:</strong> ${p.notes.base}
+            </div>
+            <div class="perfume-meta">
+              <span>₹${p.price.toLocaleString()}</span>
+              <span>${p.family}</span>
+              <span>${p.where}</span>
+            </div>
+          </div>
+        `).join('')}
+      ` : ''}
+      <button class="restart-btn" onclick="restart()">Retake Quiz</button>
+    </div>
+  `;
+}
+
+function restart() {
+  answers = {};
+  currentStep = 1;
+  render();
+}
+
+// Init
+render();
+</script>
+</body>
+</html>
