@@ -1,2 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sillage — Fragrance Discovery</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Jost:wght@200;300;400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --lilac: #C4A8D4;
+    --lilac-light: #E2D4EC;
+    --lilac-pale: #F2EBF8;
+    --plum: #3D2152;
+    --plum-mid: #6B4585;
+    --cream: #FAF6F0;
+    --dusty-rose: #D4A8B4;
+    --charcoal: #2C2530;
+    --text-muted: #8A7A92;
+    /* quiz vars */
+    --mid-plum: #8B4FA6;
+    --deep-plum: #5C2D6E;
+    --soft-lilac: #EDE0F5;
+    --text-dark: #2C1A35;
+    --text-mid: #6B4D7A;
+    --text-light: #9E7FB0;
+    --card-bg: rgba(255,255,255,0.92);
+    --shadow: 0 4px 32px rgba(92,45,110,0.10);
+    --shadow-hover: 0 8px 40px rgba(92,45,110,0.18);
+  }
 
-    
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--cream);
+    color: var(--charcoal);
+    font-family: 'Jost', sans-serif;
+    font-weight: 300;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  .cursor {
+    position: fixed;
+    width: 8px; height: 8px;
+    background: var(--plum);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transition: transform 0.15s ease;
+  }
+  .cursor-ring {
+    position: fixed;
+    width: 32px; height: 32px;
+    border: 1px solid var(--lilac);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9998;
+    transition: all 0.3s ease;
+  }
+
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    background: rgba(250,246,240,0.85);
+    backdrop-filter: blur(10px);
+    transition: transform 0.4s ease;
+  }
+  nav.hidden { transform: translateY(-100%); }
+
+  .logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.6rem;
+    font-weight: 300;
+    letter-spacing: 0.15em;
+    color: var(--plum);
+    text-decoration: none;
+    cursor: none;
+  }
+  .logo span { font-style: italic; color: var(--plum-mid); }
+
+  .nav-links {
+    display: flex;
+    gap: 3rem;
+    list-style: none;
+  }
+  .nav-links a {
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.3s;
+    cursor: none;
+  }
+  .nav-links a:hover { color: var(--plum); }
+
+  .hero {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-left {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 8rem 4rem 4rem 4rem;
+    position: relative;
+    z-index: 2;
+  }
+  .hero-tag {
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--lilac);
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.2s forwards;
+  }
+  .hero-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(3.5rem, 6vw, 6rem);
+    font-weight: 300;
+    line-height: 1.05;
+    color: var(--plum);
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.4s forwards;
+  }
+  .hero-title em { font-style: italic; color: var(--plum-mid); }
+  .hero-subtitle {
+    font-size: 0.9rem;
+    line-height: 1.9;
+    color: var(--text-muted);
+    max-width: 380px;
+    margin-bottom: 3.5rem;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.6s forwards;
+  }
+  .hero-cta {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.8s forwards;
+  }
+  .btn-primary {
+    background: var(--plum);
+    color: var(--cream);
+    padding: 1rem 2.5rem;
+    font-family: 'Jost', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 300;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    border: none;
+    cursor: none;
+    transition: all 0.3s ease;
+    display: inline-block;
+    text-decoration: none;
+  }
+  .btn-primary:hover { background: var(--plum-mid); transform: translateY(-2px); }
+  .btn-text {
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: color 0.3s;
+    cursor: none;
+  }
+  .btn-text:hover { color: var(--plum); }
+  .btn-text::after { content: '→'; }
+
+  .hero-right { position: relative; overflow: hidden; }
+  .hero-bg {
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, var(--lilac-pale) 0%, var(--lilac-light) 40%, var(--lilac) 100%);
+  }
+  .hero-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    animation: float 6s ease-in-out infinite;
+  }
+  .orb1 { width:400px;height:400px;background:radial-gradient(circle,rgba(107,69,133,0.3),transparent);top:10%;left:10%;animation-delay:0s; }
+  .orb2 { width:300px;height:300px;background:radial-gradient(circle,rgba(212,168,180,0.25),transparent);top:40%;left:50%;animation-delay:-2s; }
+  .orb3 { width:250px;height:250px;background:radial-gradient(circle,rgba(196,168,212,0.35),transparent);top:70%;left:20%;animation-delay:-4s; }
+  .hero-stat {
+    position: absolute;
+    bottom: 3rem; right: 3rem;
+    text-align: right;
+  }
+  .hero-stat-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 3rem;
+    color: var(--plum);
+    font-weight: 300;
+    line-height: 1;
+  }
+  .hero-stat-label { font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--plum-mid); }
+  .bottle-svg {
+    width:140px;
+    position:absolute;top:50%;left:50%;
+    transform:translate(-50%,-50%);
+    opacity:0;
+    animation:floatBottle 5s ease-in-out infinite, fadeIn 1s ease 1s forwards;
+  }
+
+  .marquee-wrap { overflow:hidden;border-top:1px solid var(--lilac-light);border-bottom:1px solid var(--lilac-light);padding:1.2rem 0; }
+  .marquee-track {
+    display:flex;gap:3rem;align-items:center;
+    animation:marquee 20s linear infinite;
+    width:max-content;
+  }
+  .marquee-track span { font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-muted);white-space:nowrap; }
+  .marquee-track .dot { color:var(--lilac); }
+
+  .section { padding:8rem 4rem; }
+  .section-label { font-size:0.65rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--lilac);margin-bottom:1rem; }
+  .section-title {
+    font-family:'Cormorant Garamond',serif;
+    font-size:clamp(2rem,4vw,3.5rem);
+    font-weight:300;color:var(--plum);
+    line-height:1.15;margin-bottom:4rem;
+  }
+  .section-title em { font-style:italic;color:var(--plum-mid); }
+  .steps { display:grid;grid-template-columns:repeat(3,1fr);gap:3rem; }
+  .step { opacity:0;transform:translateY(20px);transition:all 0.6s ease; }
+  .step.visible { opacity:1;transform:none; }
+  .step-num { font-family:'Cormorant Garamond',serif;font-size:3rem;color:var(--lilac);font-weight:300;margin-bottom:1rem; }
+  .step-title { font-size:0.85rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--plum);margin-bottom:1rem; }
+  .step-desc { font-size:0.88rem;line-height:1.9;color:var(--text-muted); }
+
+  .featured { padding:6rem 4rem;background:var(--plum); }
+  .featured .section-label { color:var(--lilac); }
+  .featured .section-title { color:var(--cream); }
+  .fragrance-grid { display:grid;grid-template-columns:repeat(4,1fr);gap:1.5rem; }
+  .frag-card {
+    background:rgba(255,255,255,0.05);
+    border:1px solid rgba(196,168,212,0.2);
+    padding:2rem;
+    transition:all 0.3s ease;
+    cursor:none;
+  }
+  .frag-card:hover { background:rgba(255,255,255,0.08);transform:translateY(-4px); }
+  .frag-brand { font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--lilac);margin-bottom:0.8rem; }
+  .frag-name { font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--cream);font-weight:300;margin-bottom:1rem; }
+  .frag-desc { font-size:0.82rem;line-height:1.8;color:rgba(250,246,240,0.6);margin-bottom:1.5rem; }
+  .frag-tags { display:flex;flex-wrap:wrap;gap:0.5rem; }
+  .tag { font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.3rem 0.8rem;border:1px solid rgba(196,168,212,0.3);color:var(--lilac);border-radius:100px; }
+
+  /* Quiz CTA section */
+  .quiz-cta-section {
+    padding: 8rem 4rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  footer {
+    background:var(--charcoal);
+    padding:4rem;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .footer-logo { font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--cream);font-weight:300;letter-spacing:0.15em; }
+  .footer-logo span { font-style:italic;color:var(--lilac); }
+  .footer-text { font-size:0.7rem;letter-spacing:0.1em;color:var(--text-muted); }
+
+  @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:none} }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-20px)} }
+  @keyframes floatBottle { 0%,100%{transform:translate(-50%,-50%) translateY(0)} 50%{transform:translate(-50%,-50%) translateY(-15px)} }
+  @keyframes marquee { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+
+  @media (max-width:768px) {
+    nav { padding:1rem 1.5rem; }
+    .nav-links { display:none; }
+    .hero { grid-template-columns:1fr; }
+    .hero-right { height:280px; }
+    .hero-left { padding:7rem 1.5rem 2rem; }
+    .section { padding:4rem 1.5rem; }
+    .steps { grid-template-columns:1fr;gap:1.5rem; }
+    .featured { padding:4rem 1.5rem; }
+    .fragrance-grid { grid-template-columns:1fr;gap:1rem; }
+    .quiz-cta-section { padding:4rem 1.5rem; }
+    footer { flex-direction:column;gap:1rem;text-align:center;padding:2rem 1.5rem; }
+  }
+
+  /* ── QUIZ OVERLAY ────────────────────────────────────── */
+  #quiz-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 500;
+    background: var(--cream);
+    overflow-y: auto;
+    animation: fadeIn 0.3s ease;
+  }
+  #quiz-overlay.open { display: block; }
+
+  .quiz-overlay-inner {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+  .quiz-overlay-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 36px;
+  }
+  .quiz-overlay-wordmark {
+    font-family:'Cormorant Garamond',serif;
+    font-size:1.4rem;font-weight:300;
+    letter-spacing:0.3em;color:var(--mid-plum);
+    text-transform:uppercase;
+  }
+  .quiz-close {
+    background:none;border:none;
+    font-size:1.5rem;color:var(--text-light);
+    cursor:pointer;
+    padding:4px 10px;
+    border-radius:8px;
+    transition:all 0.2s;
+    font-family:'Jost',sans-serif;
+  }
+  .quiz-close:hover { background:var(--soft-lilac);color:var(--deep-plum); }
+
+  .qprog-wrap { margin-bottom:36px; }
+  .qprog-labels { display:flex;justify-content:space-between;font-size:0.72rem;color:var(--text-light);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px; }
+  .qprog-track { height:3px;background:rgba(200,168,216,0.25);border-radius:99px;overflow:hidden; }
+  .qprog-fill { height:100%;background:linear-gradient(90deg,var(--lilac),var(--mid-plum));border-radius:99px;transition:width 0.5s ease; }
+
+  .question-card {
+    background:var(--card-bg);
+    border-radius:24px;padding:40px;
+    box-shadow:var(--shadow);
+    backdrop-filter:blur(8px);
+    border:1px solid rgba(200,168,216,0.3);
+    animation:fadeUp 0.4s ease both;
+  }
+  .q-step { font-size:0.72rem;color:var(--text-light);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:12px; }
+  .q-title { font-family:'Cormorant Garamond',serif;font-size:clamp(1.35rem,3.5vw,1.75rem);font-weight:400;color:var(--deep-plum);line-height:1.3;margin-bottom:8px; }
+  .q-sub { font-size:0.88rem;color:var(--text-light);margin-bottom:28px;font-weight:300; }
+
+  .options-grid { display:grid;gap:12px; }
+  .options-grid.two-col { grid-template-columns:1fr 1fr; }
+  .options-grid.one-col { grid-template-columns:1fr; }
+
+  .option-btn {
+    background:#fff;
+    border:1.5px solid rgba(200,168,216,0.4);
+    border-radius:14px;padding:16px 20px;
+    cursor:pointer;text-align:left;
+    transition:all 0.2s ease;
+    display:flex;align-items:flex-start;gap:14px;
+    font-family:'DM Sans',sans-serif;
+  }
+  .option-btn:hover { border-color:var(--lilac);background:var(--soft-lilac);transform:translateY(-1px);box-shadow:var(--shadow-hover); }
+  .option-btn.selected { border-color:var(--mid-plum);background:linear-gradient(135deg,rgba(200,168,216,0.2),rgba(139,79,166,0.08));box-shadow:0 0 0 3px rgba(139,79,166,0.12); }
+  .option-btn.dislike-selected { border-color:#d48a8a;background:rgba(212,138,138,0.08); }
+
+  .option-emoji { font-size:1.4rem;flex-shrink:0;margin-top:1px; }
+  .option-label { font-size:0.95rem;font-weight:500;color:var(--text-dark);display:block;margin-bottom:2px; }
+  .option-desc { font-size:0.80rem;color:var(--text-light);font-weight:300;line-height:1.4; }
+
+  .nav-row { display:flex;justify-content:space-between;align-items:center;margin-top:28px;gap:12px; }
+  .btn-back {
+    background:none;border:1.5px solid rgba(200,168,216,0.5);
+    border-radius:12px;padding:12px 20px;
+    font-family:'DM Sans',sans-serif;font-size:0.88rem;
+    color:var(--text-light);cursor:pointer;transition:all 0.2s;
+  }
+  .btn-back:hover { border-color:var(--lilac);color:var(--mid-plum); }
+  .btn-back:disabled { opacity:0.3;pointer-events:none; }
+  .btn-next {
+    background:linear-gradient(135deg,var(--mid-plum),var(--deep-plum));
+    border:none;border-radius:12px;padding:13px 32px;
+    font-family:'DM Sans',sans-serif;font-size:0.93rem;font-weight:500;
+    color:#fff;cursor:pointer;transition:all 0.2s;
+    letter-spacing:0.03em;flex:1;max-width:240px;margin-left:auto;
+  }
+  .btn-next:hover { opacity:0.88;transform:translateY(-1px);box-shadow:0 6px 24px rgba(92,45,110,0.28); }
+  .btn-next:disabled { opacity:0.4;pointer-events:none; }
+
+  /* Results */
+  .results-card { background:var(--card-bg);border-radius:24px;padding:40px;box-shadow:var(--shadow);border:1px solid rgba(200,168,216,0.3);animation:fadeUp 0.5s ease both;text-align:center; }
+  .results-eyebrow { font-size:0.72rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-light);margin-bottom:10px; }
+  .results-title { font-family:'Cormorant Garamond',serif;font-size:clamp(1.6rem,4vw,2.2rem);color:var(--deep-plum);font-weight:400;margin-bottom:32px; }
+  .match-main { background:linear-gradient(135deg,rgba(200,168,216,0.18),rgba(139,79,166,0.08));border:1.5px solid rgba(139,79,166,0.25);border-radius:20px;padding:28px;margin-bottom:24px;text-align:left; }
+  .match-tag { display:inline-block;background:var(--mid-plum);color:#fff;font-size:0.68rem;letter-spacing:0.12em;text-transform:uppercase;padding:4px 12px;border-radius:99px;margin-bottom:14px; }
+  .match-name { font-family:'Cormorant Garamond',serif;font-size:1.7rem;font-weight:400;color:var(--deep-plum);margin-bottom:4px; }
+  .match-brand { font-size:0.82rem;color:var(--text-light);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px; }
+  .match-desc { font-size:0.88rem;color:var(--text-mid);line-height:1.6;margin-bottom:14px; }
+  .match-meta { display:flex;gap:16px;flex-wrap:wrap;align-items:center; }
+  .match-pill { font-size:0.78rem;color:var(--text-mid);background:rgba(200,168,216,0.2);border-radius:99px;padding:4px 12px; }
+  .also-like-title { font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:400;color:var(--text-mid);margin-bottom:14px;font-style:italic; }
+  .also-grid { display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:28px; }
+  .also-card { background:#fff;border:1.5px solid rgba(200,168,216,0.3);border-radius:16px;padding:18px;text-align:left; }
+  .also-name { font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--deep-plum);margin-bottom:3px; }
+  .also-brand { font-size:0.75rem;color:var(--text-light);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px; }
+  .also-desc { font-size:0.80rem;color:var(--text-mid);line-height:1.4; }
+  .btn-retake { background:none;border:1.5px solid var(--mid-plum);border-radius:12px;padding:13px 32px;font-family:'DM Sans',sans-serif;font-size:0.9rem;color:var(--mid-plum);cursor:pointer;transition:all 0.2s;font-weight:500; }
+  .btn-retake:hover { background:var(--soft-lilac); }
+
+  #confetti-canvas { position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999; }
+
+  @media (max-width:520px) {
+    .question-card,.results-card { padding:28px 20px; }
+    .options-grid.two-col { grid-template-columns:1fr; }
+    .also-grid { grid-template-columns:1fr; }
+    .nav-row { flex-wrap:wrap; }
+    .btn-next { max-width:100%; }
+  }
+
+  /* body::before/after orbs for quiz overlay background feel */
+  #quiz-overlay::before {
+    content:'';position:fixed;top:-120px;right:-120px;width:500px;height:500px;border-radius:50%;
+    background:radial-gradient(circle,rgba(200,168,216,0.18) 0%,transparent 70%);pointer-events:none;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- QUIZ OVERLAY -->
+<div id="quiz-overlay">
+  <div class="quiz-overlay-inner">
+    <div class="quiz-overlay-header">
+      <span class="quiz-overlay-wordmark">Sillage</span>
+      <button class="quiz-close" onclick="closeQuiz()">✕ Close</button>
+    </div>
+    <div class="qprog-wrap">
+      <div class="qprog-labels">
+        <span id="prog-label">Step 1 of 5</span>
+        <span id="prog-pct">20%</span>
+      </div>
+      <div class="qprog-track"><div class="qprog-fill" id="progress-fill" style="width:20%"></div></div>
+    </div>
+    <div id="quiz-container"></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav id="main-nav">
+  <a href="#" class="logo">Sil<span>lage</span></a>
+  <ul class="nav-links">
+    <li><a href="#">Discover</a></li>
+    <li><a href="#" onclick="openQuiz();return false;">Scent Quiz</a></li>
+    <li><a href="#">Scent Theory</a></li>
+    <li><a href="#">Brands</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-left">
+    <p class="hero-tag">India's fragrance discovery platform</p>
+    <h1 class="hero-title">Find the scent<br>that is <em>entirely</em><br>you.</h1>
+    <p class="hero-subtitle">No jargon. No confusion. Just a few questions about your life — and we'll find your perfect fragrance, from the best Indian artisanal brands.</p>
+    <div class="hero-cta">
+      <button class="btn-primary" onclick="openQuiz()">Take the Quiz</button>
+      <a href="#" class="btn-text">Browse fragrances</a>
+    </div>
+  </div>
+  <div class="hero-right">
+    <div class="hero-bg"></div>
+    <div class="hero-orb orb1"></div>
+    <div class="hero-orb orb2"></div>
+    <div class="hero-orb orb3"></div>
+    <svg class="bottle-svg" viewBox="0 0 140 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="50" y="0" width="40" height="15" rx="4" fill="#6B4585" opacity="0.6"/>
+      <rect x="55" y="12" width="30" height="20" rx="3" fill="#6B4585" opacity="0.7"/>
+      <path d="M30 75 Q25 80 25 100 L25 210 Q25 225 40 225 L100 225 Q115 225 115 210 L115 100 Q115 80 110 75 L85 32 L55 32 Z" fill="url(#bottleGrad)" opacity="0.85"/>
+      <path d="M35 110 L105 110 L105 210 Q105 218 98 218 L42 218 Q35 218 35 210 Z" fill="url(#liquidGrad)" opacity="0.5"/>
+      <rect x="42" y="155" width="56" height="45" rx="2" fill="rgba(255,255,255,0.15)"/>
+      <text x="70" y="173" text-anchor="middle" font-family="Cormorant Garamond, serif" font-size="7" fill="rgba(255,255,255,0.9)" letter-spacing="2">SILLAGE</text>
+      <text x="70" y="186" text-anchor="middle" font-family="Jost, sans-serif" font-size="5" fill="rgba(255,255,255,0.6)" letter-spacing="1.5">No. 01</text>
+      <text x="70" y="196" text-anchor="middle" font-family="Jost, sans-serif" font-size="4.5" fill="rgba(255,255,255,0.5)" letter-spacing="1">EAU DE PARFUM</text>
+      <path d="M40 75 Q70 65 100 75" stroke="rgba(255,255,255,0.3)" stroke-width="1" fill="none"/>
+      <defs>
+        <linearGradient id="bottleGrad" x1="25" y1="0" x2="115" y2="240" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#C4A8D4"/>
+          <stop offset="50%" stop-color="#9B6BB5"/>
+          <stop offset="100%" stop-color="#3D2152"/>
+        </linearGradient>
+        <linearGradient id="liquidGrad" x1="25" y1="110" x2="115" y2="225" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#E2D4EC"/>
+          <stop offset="100%" stop-color="#6B4585"/>
+        </linearGradient>
+      </defs>
+    </svg>
+    <div class="hero-stat">
+      <div class="hero-stat-num">35+</div>
+      <div class="hero-stat-label">Curated fragrances</div>
+    </div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-wrap">
+  <div class="marquee-track">
+    <span>ISAK Fragrances</span><span class="dot">·</span>
+    <span>Fraganote</span><span class="dot">·</span>
+    <span>Raahi Parfums</span><span class="dot">·</span>
+    <span>House of Kanzan</span><span class="dot">·</span>
+    <span>ISAK Fragrances</span><span class="dot">·</span>
+    <span>Fraganote</span><span class="dot">·</span>
+    <span>Raahi Parfums</span><span class="dot">·</span>
+    <span>House of Kanzan</span><span class="dot">·</span>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section class="section">
+  <p class="section-label">How it works</p>
+  <h2 class="section-title">No fragrance expertise <em>required.</em></h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-title">Tell us about your life</div>
+      <p class="step-desc">Long work hours or weekend brunches? AC office or outdoor commute? We ask about your actual life — not your taste in music.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-title">We decode the jargon</div>
+      <p class="step-desc">You'll never see the words "sillage" or "EDP" unless you want to. We translate everything into language that actually makes sense.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-title">Find your perfect scent</div>
+      <p class="step-desc">5 questions. Your complete match — from the best Indian artisanal brands, all under ₹3,000.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURED -->
+<section class="featured">
+  <p class="section-label">Featured fragrances</p>
+  <h2 class="section-title">Curated for the <em>Indian nose.</em></h2>
+  <div class="fragrance-grid">
+    <div class="frag-card">
+      <div class="frag-brand">ISAK Fragrances</div>
+      <div class="frag-name">Rose & Oud</div>
+      <p class="frag-desc">Deep rose with smoky oud. Like a wedding in an old haveli.</p>
+      <div class="frag-tags"><span class="tag">Evening</span><span class="tag">Date</span><span class="tag">Floral</span></div>
+    </div>
+    <div class="frag-card">
+      <div class="frag-brand">Raahi Parfums</div>
+      <div class="frag-name">Raat Rani</div>
+      <p class="frag-desc">The night-blooming queen. Intense, white, and unforgettable at dusk.</p>
+      <div class="frag-tags"><span class="tag">Night</span><span class="tag">Floral</span><span class="tag">Long-lasting</span></div>
+    </div>
+    <div class="frag-card">
+      <div class="frag-brand">House of Kanzan</div>
+      <div class="frag-name">Hinoki Wood</div>
+      <p class="frag-desc">Japanese cypress — crisp, clean, and quietly luxurious.</p>
+      <div class="frag-tags"><span class="tag">Unisex</span><span class="tag">Woody</span><span class="tag">Everyday</span></div>
+    </div>
+    <div class="frag-card">
+      <div class="frag-brand">Fraganote</div>
+      <div class="frag-name">Mystic Amber</div>
+      <p class="frag-desc">Warm amber with a hint of spice. Like a candle lit on a cool evening.</p>
+      <div class="frag-tags"><span class="tag">Evening</span><span class="tag">Warm</span><span class="tag">Date</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ CTA -->
+<section class="quiz-cta-section">
+  <p class="section-label">The quiz</p>
+  <h2 class="section-title" style="max-width:500px;margin:0 auto 1.2rem;">5 questions. Your <em>perfect</em> scent.</h2>
+  <p style="font-size:0.9rem;line-height:1.9;color:var(--text-muted);margin-bottom:2.5rem;max-width:420px;">
+    Tell us about your life — when you'll wear it, how long you want it to last, your budget — and we'll match you with a fragrance from the best Indian artisanal brands.
+  </p>
+  <button class="btn-primary" onclick="openQuiz()">Start the quiz →</button>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Sil<span>lage</span></div>
+  <div class="footer-text">Fragrance discovery for India · Up to ₹3,000</div>
+</footer>
+
+<script>
+// ── QUIZ OPEN/CLOSE ──────────────────────────────────────
+function openQuiz() {
+  const overlay = document.getElementById('quiz-overlay');
+  overlay.classList.add('open');
+  overlay.scrollTop = 0;
+  document.body.style.overflow = 'hidden';
+  quizState = { step:0, occasion:null, longevity:null, budget:null, dislikes:[], family:null };
+  renderQuiz();
+}
+function closeQuiz() {
+  document.getElementById('quiz-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ── PERFUME DATABASE ─────────────────────────────────────
+const perfumes = [
+  { id:1,  name:"Vetiver & Cedarwood",    brand:"ISAK",            family:"woody",    price:1495, longevity:"long",   occasion:["everyday","work"],         notes:"Clean woody earthy base with vetiver and cedarwood. Like rain on dry soil — grounded and calm.",                buy:"isakfragrances.com" },
+  { id:2,  name:"White Musk & Sandalwood",brand:"ISAK",            family:"woody",    price:1495, longevity:"long",   occasion:["everyday","date"],          notes:"Soft skin-like musk with warm Indian sandalwood. Clean, close-to-skin and subtly sensual.",                    buy:"isakfragrances.com" },
+  { id:3,  name:"Rose & Oud",             brand:"ISAK",            family:"floral",   price:1995, longevity:"long",   occasion:["date","celebration"],       notes:"Deep rose with smoky oud — bold and intimate. Like a wedding in an old haveli.",                             buy:"isakfragrances.com" },
+  { id:4,  name:"Jasmine & Vetiver",      brand:"ISAK",            family:"floral",   price:1495, longevity:"medium", occasion:["everyday","work"],         notes:"White jasmine grounded by earthy vetiver. Bright on top, mysterious beneath.",                               buy:"isakfragrances.com" },
+  { id:5,  name:"Bergamot & Cedar",       brand:"ISAK",            family:"fresh",    price:1495, longevity:"medium", occasion:["everyday","work"],         notes:"Zesty bergamot with a light woody dry-down. Clean and energising.",                                          buy:"isakfragrances.com" },
+  { id:6,  name:"Green Tea & Mint",       brand:"ISAK",            family:"fresh",    price:1295, longevity:"light",  occasion:["everyday","gym"],          notes:"Crisp green tea with a cool mint finish. Like a fresh cup on a quiet morning.",                             buy:"isakfragrances.com" },
+  { id:7,  name:"Amber & Vanilla",        brand:"ISAK",            family:"amber",    price:1495, longevity:"long",   occasion:["date","celebration"],      notes:"Warm golden amber with soft vanilla. Like dessert for the skin — cosy and indulgent.",                      buy:"isakfragrances.com" },
+  { id:8,  name:"Tuberose & Musk",        brand:"ISAK",            family:"floral",   price:1495, longevity:"medium", occasion:["date","celebration"],      notes:"Heady tuberose — like South Indian temple flowers — with a soft musky finish.",                            buy:"isakfragrances.com" },
+  { id:9,  name:"Patchouli & Amber",      brand:"ISAK",            family:"amber",    price:1495, longevity:"long",   occasion:["date","evening"],          notes:"Rich patchouli — like dark earth and incense — warmed by amber. Deep and hypnotic.",                       buy:"isakfragrances.com" },
+  { id:10, name:"Lemon & Neroli",         brand:"ISAK",            family:"fresh",    price:1295, longevity:"light",  occasion:["everyday","gym"],          notes:"Bright lemon with soft neroli blossom. Like squeezing citrus in a sunlit kitchen.",                        buy:"isakfragrances.com" },
+  { id:11, name:"Sandalwood Elixir",      brand:"Fraganote",       family:"woody",    price:1200, longevity:"long",   occasion:["everyday","work"],         notes:"Milky, smooth sandalwood — like the inside of a freshly carved wooden box. Warm and familiar.",            buy:"fraganote.com" },
+  { id:12, name:"Oud Royale",             brand:"Fraganote",       family:"amber",    price:1800, longevity:"long",   occasion:["date","celebration"],      notes:"Bold, resinous oud with a smoky trail. Rich and ceremonial — built for big occasions.",                    buy:"fraganote.com" },
+  { id:13, name:"Rose Absolute",          brand:"Fraganote",       family:"floral",   price:1200, longevity:"medium", occasion:["everyday","date"],         notes:"Pure, concentrated rose — fresh-cut and lush. Like a bouquet still wet with dew.",                        buy:"fraganote.com" },
+  { id:14, name:"Citrus Bloom",           brand:"Fraganote",       family:"fresh",    price:999,  longevity:"light",  occasion:["everyday","gym"],          notes:"Lively citrus burst with a hint of white flowers. Uplifting and clean.",                                  buy:"fraganote.com" },
+  { id:15, name:"Mystic Amber",           brand:"Fraganote",       family:"amber",    price:1400, longevity:"long",   occasion:["evening","date"],          notes:"Warm amber with a hint of spice. Like a candle lit on a cool evening.",                                  buy:"fraganote.com" },
+  { id:16, name:"Vetiver Noir",           brand:"Fraganote",       family:"woody",    price:1300, longevity:"long",   occasion:["work","everyday"],         notes:"Deep smoky vetiver — like ash and damp forest floor. Earthy, confident, understated.",                    buy:"fraganote.com" },
+  { id:17, name:"Jasmine Soiree",         brand:"Fraganote",       family:"floral",   price:1100, longevity:"medium", occasion:["date","celebration"],      notes:"Evening jasmine — rich and slightly heady, like mogra garlands at dusk.",                                buy:"fraganote.com" },
+  { id:18, name:"Cedar & Spice",          brand:"Fraganote",       family:"woody",    price:1100, longevity:"medium", occasion:["work","everyday"],         notes:"Dry cedar with warm spice. Clean and professional — confident without being loud.",                        buy:"fraganote.com" },
+  { id:19, name:"Vanilla Dusk",           brand:"Fraganote",       family:"gourmand", price:999,  longevity:"medium", occasion:["date","evening"],          notes:"Creamy vanilla with a hint of caramel warmth. Like kheer — indulgent and comforting.",                    buy:"fraganote.com" },
+  { id:20, name:"Fresh Greens",           brand:"Fraganote",       family:"fresh",    price:899,  longevity:"light",  occasion:["everyday","gym"],          notes:"Crisp green leaves and herbs. Like walking through a wet garden in the morning.",                        buy:"fraganote.com" },
+  { id:21, name:"Raat Rani",              brand:"Raahi Parfums",   family:"floral",   price:1600, longevity:"long",   occasion:["date","celebration"],      notes:"Raat Rani — the night-blooming queen — intense, white, and unforgettable at dusk.",                      buy:"raahiparfums.com" },
+  { id:22, name:"Khus & Earth",           brand:"Raahi Parfums",   family:"woody",    price:1400, longevity:"long",   occasion:["everyday","work"],         notes:"Classic khus (vetiver) with a deep earthy base. Rooted, calm, and quintessentially Indian.",              buy:"raahiparfums.com" },
+  { id:23, name:"Gulab Attar",            brand:"Raahi Parfums",   family:"floral",   price:1800, longevity:"long",   occasion:["celebration","date"],      notes:"Traditional Indian rose attar — concentrated, true-to-flower, and long-lasting on warm skin.",            buy:"raahiparfums.com" },
+  { id:24, name:"Haldi & Saffron",        brand:"Raahi Parfums",   family:"amber",    price:2200, longevity:"long",   occasion:["celebration","date"],      notes:"Turmeric and saffron — golden, warm, and deeply rooted in Indian ritual. Distinctive and bold.",          buy:"raahiparfums.com" },
+  { id:25, name:"Monsoon Walk",           brand:"Raahi Parfums",   family:"fresh",    price:1200, longevity:"medium", occasion:["everyday","gym"],          notes:"Petrichor — the scent of first rain on dry earth — mixed with fresh greens. Pure Indian nostalgia.",      buy:"raahiparfums.com" },
+  { id:26, name:"Sandalwood & Jasmine",   brand:"Raahi Parfums",   family:"woody",    price:1500, longevity:"long",   occasion:["everyday","date"],         notes:"Creamy Indian sandalwood with white jasmine. Soft, devotional, and skin-like.",                          buy:"raahiparfums.com" },
+  { id:27, name:"Cardamom Chai",          brand:"Raahi Parfums",   family:"gourmand", price:1100, longevity:"medium", occasion:["everyday","work"],         notes:"Warm cardamom and spiced tea — like the first sip of chai on a winter morning.",                        buy:"raahiparfums.com" },
+  { id:28, name:"Night Oud",              brand:"Raahi Parfums",   family:"amber",    price:2500, longevity:"long",   occasion:["date","celebration"],      notes:"Dark, smoky oud warmed by amber. Intense and ceremonial — a scent built for the night.",                 buy:"raahiparfums.com" },
+  { id:29, name:"Plum Blossom",           brand:"House of Kanzan", family:"floral",   price:2500, longevity:"medium", occasion:["date","celebration"],      notes:"Delicate plum blossom with a soft woody base. Elegant and feminine — like spring in a Japanese garden.", buy:"houseofkanzan.com" },
+  { id:30, name:"Black Tea & Bergamot",   brand:"House of Kanzan", family:"fresh",    price:2200, longevity:"medium", occasion:["work","everyday"],         notes:"Brisk black tea and sharp bergamot — sophisticated and refined.",                                        buy:"houseofkanzan.com" },
+  { id:31, name:"Hinoki Wood",            brand:"House of Kanzan", family:"woody",    price:2800, longevity:"long",   occasion:["work","everyday"],         notes:"Japanese cypress (hinoki) — crisp, clean, and quietly luxurious.",                                      buy:"houseofkanzan.com" },
+  { id:32, name:"White Lotus",            brand:"House of Kanzan", family:"floral",   price:2400, longevity:"medium", occasion:["everyday","date"],         notes:"Cool, serene white lotus — aquatic-floral, clean and meditative.",                                      buy:"houseofkanzan.com" },
+  { id:33, name:"Smoked Sakura",          brand:"House of Kanzan", family:"floral",   price:2600, longevity:"long",   occasion:["date","evening"],          notes:"Cherry blossom with a light smoky veil. Soft yet mysterious.",                                          buy:"houseofkanzan.com" },
+  { id:34, name:"Green Bamboo",           brand:"House of Kanzan", family:"fresh",    price:2000, longevity:"medium", occasion:["everyday","work"],         notes:"Crisp bamboo and cool herbs. Like walking through a bamboo grove after rain.",                          buy:"houseofkanzan.com" },
+  { id:35, name:"Amber & Cedarwood",      brand:"House of Kanzan", family:"amber",    price:2600, longevity:"long",   occasion:["evening","date"],          notes:"Rich amber with smooth Japanese cedar. Warm, refined, and deeply comforting.",                          buy:"houseofkanzan.com" },
+];
+
+// ── QUIZ STATE ───────────────────────────────────────────
+let quizState = { step:0, occasion:null, longevity:null, budget:null, dislikes:[], family:null };
+const TOTAL = 5;
+
+const familyOptions = {
+  floral:   { emoji:"🌸", label:"Floral",        desc:"Romantic and feminine — flowers, petals, blooms" },
+  fresh:    { emoji:"💧", label:"Fresh",          desc:"Clean and energising — citrus, green, airy" },
+  woody:    { emoji:"🪵", label:"Woody",          desc:"Grounded and earthy — sandalwood, cedar, vetiver" },
+  amber:    { emoji:"🍯", label:"Warm & rich",    desc:"Deep and cosy — amber, musk, oud, incense" },
+  gourmand: { emoji:"🍮", label:"Sweet & spicy",  desc:"Indulgent and comforting — vanilla, chai, spice" },
+};
+
+const quizSteps = [
+  { step:"About you",     title:"When will you wear this most?",     sub:"Pick the one that fits best.", key:"occasion", multi:false, cols:2,
+    options:[
+      { value:"everyday",    emoji:"☀️", label:"Everyday wear",      desc:"Work, errands, casual days" },
+      { value:"work",        emoji:"💼", label:"Office & work",      desc:"Professional and presentable" },
+      { value:"date",        emoji:"🌙", label:"Dates & evenings",   desc:"Close, personal, intimate" },
+      { value:"celebration", emoji:"✨", label:"Celebrations",       desc:"Weddings, festivals, parties" },
+      { value:"gym",         emoji:"🏃", label:"Sport & outdoors",   desc:"Fresh, light, active" },
+    ]},
+  { step:"Your preference", title:"How long do you want it to last?", sub:"There's no right answer — it's personal.", key:"longevity", multi:false, cols:1,
+    options:[
+      { value:"light",  emoji:"🕊️", label:"Light & subtle",  desc:"Close to skin, barely-there — like a whisper" },
+      { value:"medium", emoji:"🌿", label:"A few hours",     desc:"There when you need it, fades gracefully" },
+      { value:"long",   emoji:"🔥", label:"All day long",    desc:"Full presence from morning to night" },
+    ]},
+  { step:"Your budget",   title:"What's your budget?",               sub:"We'll only show perfumes within this range.", key:"budget", multi:false, cols:2,
+    options:[
+      { value:1000, emoji:"💛", label:"Up to ₹1,000", desc:"Great value picks" },
+      { value:1500, emoji:"💜", label:"Up to ₹1,500", desc:"Sweet spot for quality" },
+      { value:2000, emoji:"💎", label:"Up to ₹2,000", desc:"Premium range" },
+      { value:3000, emoji:"👑", label:"Up to ₹3,000", desc:"Luxury artisanal" },
+    ]},
+  { step:"Your dislikes", title:"Anything you want to avoid?",       sub:"Select all that apply. Skip if you're open to everything.", key:"dislikes", multi:true, cols:2,
+    options:[
+      { value:"floral",   emoji:"🌸", label:"Floral",     desc:"Roses, jasmine, tuberose" },
+      { value:"woody",    emoji:"🪵", label:"Woody",      desc:"Sandalwood, cedar, oud" },
+      { value:"fresh",    emoji:"💧", label:"Fresh",      desc:"Citrus, green, aquatic" },
+      { value:"amber",    emoji:"🍯", label:"Warm/amber", desc:"Oud, musk, incense" },
+      { value:"gourmand", emoji:"🍮", label:"Sweet",      desc:"Vanilla, caramel, chai" },
+    ]},
+  { step:"Your style",    title:"Which feels most like you?",         sub:"Trust your gut.", key:"family", multi:false, cols:1, options:[] },
+];
+
+function renderQuiz() {
+  if (quizState.step >= TOTAL) { showResults(); return; }
+  // progress
+  const pct = Math.round(((quizState.step+1)/TOTAL)*100);
+  document.getElementById('progress-fill').style.width = pct+'%';
+  document.getElementById('prog-label').textContent = `Step ${quizState.step+1} of ${TOTAL}`;
+  document.getElementById('prog-pct').textContent = pct+'%';
+
+  // build family options
+  if (quizState.step === 4) {
+    quizSteps[4].options = Object.entries(familyOptions)
+      .filter(([k]) => !quizState.dislikes.includes(k))
+      .map(([k,v]) => ({ value:k, ...v }));
+    if (!quizSteps[4].options.length)
+      quizSteps[4].options = Object.entries(familyOptions).map(([k,v]) => ({ value:k, ...v }));
+  }
+
+  const s = quizSteps[quizState.step];
+  const cur = quizState[s.key];
+
+  const opts = s.options.map(o => {
+    let cls = 'option-btn';
+    if (s.multi) { if ((cur||[]).includes(o.value)) cls += ' dislike-selected'; }
+    else { if (cur === o.value) cls += ' selected'; }
+    return `<button class="${cls}" data-value="${o.value}" onclick="selectOpt(this,'${s.key}','${o.value}',${s.multi})">
+      <span class="option-emoji">${o.emoji}</span>
+      <span class="option-text">
+        <span class="option-label">${o.label}</span>
+        <span class="option-desc">${o.desc}</span>
+      </span>
+    </button>`;
+  }).join('');
+
+  document.getElementById('quiz-container').innerHTML = `
+    <div class="question-card">
+      <div class="q-step">${s.step}</div>
+      <div class="q-title">${s.title}</div>
+      <div class="q-sub">${s.sub}</div>
+      <div class="options-grid ${s.cols===2?'two-col':'one-col'}">${opts}</div>
+      <div class="nav-row">
+        <button class="btn-back" onclick="qBack()" ${quizState.step===0?'disabled':''}>← Back</button>
+        <button class="btn-next" id="btn-next" onclick="qNext()" ${(s.multi||cur)?'':'disabled'}>
+          ${quizState.step===TOTAL-1?'See my scent →':'Continue →'}
+        </button>
+      </div>
+    </div>`;
+}
+
+function selectOpt(el, key, value, multi) {
+  if (multi) {
+    if (!quizState[key]) quizState[key] = [];
+    const i = quizState[key].indexOf(value);
+    if (i===-1) quizState[key].push(value); else quizState[key].splice(i,1);
+    el.closest('.options-grid').querySelectorAll('.option-btn').forEach(b => {
+      b.className = 'option-btn' + (quizState[key].includes(b.dataset.value)?' dislike-selected':'');
+    });
+  } else {
+    quizState[key] = isNaN(value) ? value : Number(value);
+    el.closest('.options-grid').querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('btn-next').disabled = false;
+  }
+}
+
+function qNext() {
+  const s = quizSteps[quizState.step];
+  if (!s.multi && !quizState[s.key] && quizState[s.key] !== 0) return;
+  quizState.step++;
+  document.getElementById('quiz-overlay').scrollTop = 0;
+  renderQuiz();
+}
+function qBack() {
+  if (quizState.step > 0) { quizState.step--; renderQuiz(); }
+}
+
+function scoreMatch(p) {
+  let score = 0;
+  if (p.price > quizState.budget) return -Infinity;
+  if (quizState.dislikes.includes(p.family)) return -Infinity;
+  if (p.family === quizState.family) score += 40;
+  if (p.occasion.includes(quizState.occasion)) score += 25;
+  if (p.longevity === quizState.longevity) score += 20;
+  else if ((quizState.longevity==='medium'&&(p.longevity==='long'||p.longevity==='light'))||(quizState.longevity==='long'&&p.longevity==='medium')) score += 8;
+  if (p.price/quizState.budget >= 0.6) score += 10;
+  return score;
+}
+
+function showResults() {
+  document.querySelector('.qprog-wrap').style.display = 'none';
+  const ranked = perfumes.map(p=>({...p,score:scoreMatch(p)})).filter(p=>p.score>-Infinity).sort((a,b)=>b.score-a.score);
+
+  if (!ranked.length) {
+    document.getElementById('quiz-container').innerHTML = `
+      <div class="results-card">
+        <div class="results-eyebrow">Hmm…</div>
+        <div class="results-title">No matches found</div>
+        <p style="color:var(--text-light);font-size:0.9rem;margin-bottom:24px;">Try relaxing your dislikes or increasing your budget.</p>
+        <button class="btn-retake" onclick="openQuiz()">Try again</button>
+      </div>`;
+    return;
+  }
+
+  const top = ranked[0];
+  const also = ranked.slice(1,3);
+  const alsoHtml = also.map(p=>`
+    <div class="also-card">
+      <div class="also-name">${p.name}</div>
+      <div class="also-brand">${p.brand}</div>
+      <div class="also-desc">${p.notes}</div>
+    </div>`).join('');
+
+  document.getElementById('quiz-container').innerHTML = `
+    <div class="results-card">
+      <div class="results-eyebrow">Your perfect match</div>
+      <div class="results-title">We found your scent.</div>
+      <div class="match-main">
+        <span class="match-tag">Perfect match</span>
+        <div class="match-name">${top.name}</div>
+        <div class="match-brand">${top.brand}</div>
+        <div class="match-desc">${top.notes}</div>
+        <div class="match-meta">
+          <span class="match-pill">₹${top.price.toLocaleString('en-IN')}</span>
+          <span class="match-pill">${cap(top.longevity)} lasting</span>
+          <span class="match-pill">${cap(top.family)}</span>
+          <a href="https://${top.buy}" target="_blank" style="font-size:0.78rem;color:var(--mid-plum);text-decoration:none;padding:4px 12px;background:rgba(139,79,166,0.1);border-radius:99px;">Shop →</a>
+        </div>
+      </div>
+      ${also.length?`<div class="also-like-title">You may also like…</div><div class="also-grid">${alsoHtml}</div>`:''}
+      <button class="btn-retake" onclick="openQuiz()">← Take the quiz again</button>
+    </div>`;
+  launchConfetti();
+}
+
+function cap(s) { return s?s[0].toUpperCase()+s.slice(1):''; }
+
+function launchConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+  const colors = ['#C8A8D8','#8B4FA6','#5C2D6E','#EDE0F5','#D4A0E8'];
+  const pieces = Array.from({length:80},()=>({
+    x:Math.random()*canvas.width, y:-10-Math.random()*100,
+    r:4+Math.random()*5, color:colors[Math.floor(Math.random()*colors.length)],
+    speed:2+Math.random()*3, drift:(Math.random()-0.5)*2,
+    spin:(Math.random()-0.5)*0.2, angle:Math.random()*Math.PI*2,
+  }));
+  let frame=0;
+  function animate() {
+    if(frame++>200){ctx.clearRect(0,0,canvas.width,canvas.height);return;}
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    pieces.forEach(p=>{
+      p.y+=p.speed; p.x+=p.drift; p.angle+=p.spin;
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.angle);
+      ctx.fillStyle=p.color; ctx.globalAlpha=Math.max(0,1-frame/180);
+      ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r*1.6); ctx.restore();
+    });
+    requestAnimationFrame(animate);
+  }
+  animate();
+}
+
+// ── HOMEPAGE JS ──────────────────────────────────────────
+let lastScroll = 0;
+const nav = document.getElementById('main-nav');
+window.addEventListener('scroll', () => {
+  const cur = window.scrollY;
+  if (cur > lastScroll && cur > 80) nav.classList.add('hidden');
+  else nav.classList.remove('hidden');
+  lastScroll = cur;
+});
+
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursorRing');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove', e => {
+  mx=e.clientX; my=e.clientY;
+  cursor.style.left=mx-4+'px'; cursor.style.top=my-4+'px';
+});
+(function animateRing(){
+  rx+=(mx-rx-16)*0.12; ry+=(my-ry-16)*0.12;
+  ring.style.left=rx+'px'; ring.style.top=ry+'px';
+  requestAnimationFrame(animateRing);
+})();
+document.querySelectorAll('button,a,.frag-card').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{cursor.style.transform='scale(2)';ring.style.transform='scale(1.5)';ring.style.borderColor='var(--plum)';});
+  el.addEventListener('mouseleave',()=>{cursor.style.transform='scale(1)';ring.style.transform='scale(1)';ring.style.borderColor='var(--lilac)';});
+});
+
+const stepEls = document.querySelectorAll('.step');
+const obs = new IntersectionObserver(entries=>{
+  entries.forEach((e,i)=>{ if(e.isIntersecting) setTimeout(()=>e.target.classList.add('visible'),i*150); });
+},{threshold:0.2});
+stepEls.forEach(s=>obs.observe(s));
+</script>
+</body>
+</html>
